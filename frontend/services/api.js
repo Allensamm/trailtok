@@ -1,8 +1,10 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-// CHANGE THIS TO YOUR LOCAL IP ADDRESS
-const BASE_URL = 'http://192.168.1.122:5000/api';
+// Production API URL - will be updated after deployment
+const BASE_URL = __DEV__ 
+  ? 'http://192.168.1.122:5000/api' 
+  : 'https://movie-app-backend.onrender.com/api';
 
 const api = axios.create({
     baseURL: BASE_URL,

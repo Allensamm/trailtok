@@ -16,6 +16,10 @@
           "value": "production"
         },
         {
+          "key": "NODE_OPTIONS",
+          "value": "--dns-result-order=ipv4first"
+        },
+        {
           "key": "DATABASE_URL",
           "value": "postgresql://postgres:I4cuicui4cuicu@db.sdvikraysasolvzanixo.supabase.co:5432/postgres"
         },

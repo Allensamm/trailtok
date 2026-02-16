@@ -21,7 +21,7 @@
         },
         {
           "key": "DATABASE_URL",
-          "value": "postgresql://postgres.sdvikraysasolvzanixo:I4cuicui4cuicu@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require"
+          "value": "postgresql://neondb_owner:npg_RLg8rh0SJuBo@ep-empty-bonus-aidl10dt-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
         },
         {
           "key": "TMDB_API_KEY",

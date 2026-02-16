@@ -58,10 +58,11 @@ app.use((err, req, res, next) => {
 });
 
 // Start server immediately
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`✓ Server is running on port ${PORT}`);
     console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`✓ Health check: http://localhost:${PORT}/health`);
+    console.log(`✓ Deployed at: ${new Date().toISOString()}`);
 });
 
 // Connect to database in background (don't block server startup)

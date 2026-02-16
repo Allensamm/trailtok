@@ -15,6 +15,8 @@ if (process.env.DATABASE_URL) {
         rejectUnauthorized: false // Required for some self-signed certs in cloud DBs
       },
       keepAlive: true,
+      // Force IPv4 to avoid ENETUNREACH errors
+      family: 4
     },
     pool: {
       max: 10,

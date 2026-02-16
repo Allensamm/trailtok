@@ -34,8 +34,14 @@ app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
         message: 'Server is running',
-        database: dbConnected ? 'connected' : 'connecting...'
+        database: dbConnected ? 'connected' : 'connecting...',
+        timestamp: new Date().toISOString()
     });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+    res.json({ message: 'Movie App Backend API', health: '/health' });
 });
 
 // 404 handler

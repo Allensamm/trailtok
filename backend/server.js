@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { sequelize } = require('./models');
+const dns = require('dns');
+const { URL } = require('url');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -51,9 +53,31 @@ async function startServer() {
     let retries = 20;
     while (retries > 0) {
         try {
-            // Test database connection
-            console.log(`Connecting to database... (Attempt ${21 - retries}/20)`);
-            await sequelize.authenticate();
+                // Debug: print DATABASE_URL and DNS resolution to help diagnose ENETUNREACH
+                console.log('DATABASE_URL:', process.env.DATABASE_URL);
+                try {
+                    const dbUrl = new URL(process.env.DATABASE_URL);
+                    const dbHost = dbUrl.hostname;
+                    const dbPort = dbUrl.port || '5432';
+                    console.log(`Resolving ${dbHost} (port ${dbPort})...`);
+                    dns.lookup(dbHost, { all: true }, (err, addresses) => {
+                        if (err) console.error('dns.lookup error:', err);
+                        else console.log('dns.lookup addresses:', addresses);
+                    });
+                    dns.resolve4(dbHost, (err, addrs) => {
+                        if (err) console.error('dns.resolve4 error:', err);
+                        else console.log('dns.resolve4:', addrs);
+                    });
+                    dns.resolve6(dbHost, (err, addrs) => {
+                        if (err) console.error('dns.resolve6 error:', err);
+                        else console.log('dns.resolve6:', addrs);
+                    });
+                    console.log(`Connecting to database... (Attempt ${21 - retries}/20)`);
+                } catch (e) {
+                    console.error('Error parsing DATABASE_URL for debug:', e.message);
+                }
+
+                await sequelize.authenticate();
             console.log('✓ Database connection established successfully');
             break;
         } catch (error) {

@@ -21,7 +21,7 @@
         },
         {
           "key": "DATABASE_URL",
-          "value": "postgresql://postgres:I4cuicui4cuicu@db.sdvikraysasolvzanixo.supabase.co:5432/postgres"
+          "value": "postgresql://postgres.sdvikraysasolvzanixo:I4cuicui4cuicu@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require"
         },
         {
           "key": "TMDB_API_KEY",

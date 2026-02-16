@@ -12,5 +12,6 @@
   },
   "plugin": [
     "opencode-scheduler"
-  ]
+  ],
+  "model": "opencode/trinity-large-preview-free"
 }

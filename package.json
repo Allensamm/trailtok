@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "cd backend && node server.js"
+    "start": "cd backend && node server.js",
+    "postinstall": "cd backend && npm install"
   },
   "dependencies": {
     "autocannon": "^8.0.0"

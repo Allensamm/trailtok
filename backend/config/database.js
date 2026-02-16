@@ -1,40 +1,115 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
-
 let sequelize;
 
 if (process.env.DATABASE_URL) {
   // Production/Remote (Supabase, Render, etc.)
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: 'postgres',
-    protocol: 'postgres',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false // Required for some self-signed certs in cloud DBs
-      }
-    },
-    pool: {
-      max: 10,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
-    },
-    retry: {
-      match: [
-        /SequelizeConnectionError/,
-        /SequelizeConnectionRefusedError/,
-        /SequelizeHostNotFoundError/,
-        /SequelizeHostNotReachableError/,
-        /SequelizeInvalidConnectionError/,
-        /SequelizeConnectionTimedOutError/,
-        /videos/,
-        /EAI_AGAIN/
-      ],
-      max: 3
+  // If an explicit IPv4 address is supplied via DATABASE_IPV4, prefer it to avoid IPv6/ENETUNREACH
+  if (process.env.DATABASE_IPV4) {
+    const { URL } = require('url');
+    try {
+      const dbUrl = new URL(process.env.DATABASE_URL);
+      const dbName = dbUrl.pathname ? dbUrl.pathname.replace(/^\//, '') : undefined;
+      const dbUser = dbUrl.username;
+      const dbPass = dbUrl.password;
+      const dbPort = dbUrl.port || 5432;
+      sequelize = new Sequelize(dbName, dbUser, dbPass, {
+        host: process.env.DATABASE_IPV4,
+        port: dbPort,
+        dialect: 'postgres',
+        logging: process.env.NODE_ENV === 'development' ? console.log : false,
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false
+          }
+        },
+        pool: {
+          max: 10,
+          min: 0,
+          acquire: 30000,
+          idle: 10000
+        },
+        retry: {
+          match: [
+            /SequelizeConnectionError/,
+            /SequelizeConnectionRefusedError/,
+            /SequelizeHostNotFoundError/,
+            /SequelizeHostNotReachableError/,
+            /SequelizeInvalidConnectionError/,
+            /SequelizeConnectionTimedOutError/,
+            /videos/,
+            /EAI_AGAIN/
+          ],
+          max: 3
+        }
+      });
+    } catch (err) {
+      console.error('Error parsing DATABASE_URL for DATABASE_IPV4 fallback:', err.message);
+      // Fallback to standard URL-based connection
+      sequelize = new Sequelize(process.env.DATABASE_URL, {
+        dialect: 'postgres',
+        protocol: 'postgres',
+        logging: process.env.NODE_ENV === 'development' ? console.log : false,
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false
+          }
+        },
+        pool: {
+          max: 10,
+          min: 0,
+          acquire: 30000,
+          idle: 10000
+        },
+        retry: {
+          match: [
+            /SequelizeConnectionError/,
+            /SequelizeConnectionRefusedError/,
+            /SequelizeHostNotFoundError/,
+            /SequelizeHostNotReachableError/,
+            /SequelizeInvalidConnectionError/,
+            /SequelizeConnectionTimedOutError/,
+            /videos/,
+            /EAI_AGAIN/
+          ],
+          max: 3
+        }
+      });
     }
-  });
+  } else {
+    sequelize = new Sequelize(process.env.DATABASE_URL, {
+      dialect: 'postgres',
+      protocol: 'postgres',
+      logging: process.env.NODE_ENV === 'development' ? console.log : false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false // Required for some self-signed certs in cloud DBs
+        }
+      },
+      pool: {
+        max: 10,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+      },
+      retry: {
+        match: [
+          /SequelizeConnectionError/,
+          /SequelizeConnectionRefusedError/,
+          /SequelizeHostNotFoundError/,
+          /SequelizeHostNotReachableError/,
+          /SequelizeInvalidConnectionError/,
+          /SequelizeConnectionTimedOutError/,
+          /videos/,
+          /EAI_AGAIN/
+        ],
+        max: 3
+      }
+    });
+  }
 } else {
   // Local Development
   sequelize = new Sequelize(

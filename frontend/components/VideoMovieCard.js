@@ -13,11 +13,12 @@ import {
     KeyboardAvoidingView,
     Platform,
     Animated,
+    Modal,
 } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { WebView } from 'react-native-webview';
 import api from '../services/api';
 
 const { width, height } = Dimensions.get('window');
@@ -35,42 +36,37 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
     const [isPaused, setIsPaused] = useState(false);
     const [showPauseIcon, setShowPauseIcon] = useState(false);
     const [showComments, setShowComments] = useState(false);
+    const [showVideoModal, setShowVideoModal] = useState(false);
+    const [embedUrl, setEmbedUrl] = useState(null);
     const [comments, setComments] = useState([]);
     const [commentText, setCommentText] = useState('');
     const [loadingComments, setLoadingComments] = useState(false);
     const slideAnim = useRef(new Animated.Value(height)).current;
 
-    // Use cached stream if available, otherwise fetch
+    // Fetch embed URL for YouTube video
     useEffect(() => {
-        if (cachedStreamUrl) {
-            setStreamUrl(cachedStreamUrl);
-            setVideoReady(true);
-            setLoading(false);
-            return;
-        }
-
-        const fetchStream = async () => {
+        const fetchVideo = async () => {
             try {
                 setLoading(true);
                 setError(false);
                 const response = await api.get(`/movies/${movie.id}/stream`);
 
-                if (response.data.streamUrl) {
-                    setStreamUrl(response.data.streamUrl);
+                if (response.data.embedUrl) {
+                    setEmbedUrl(response.data.embedUrl);
                     setVideoReady(true);
                 } else {
                     setError(true);
                 }
             } catch (err) {
-                // Silently handle error - just show poster image
+                console.log('Video fetch error:', err);
                 setError(true);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchStream();
-    }, [movie.id, cachedStreamUrl]);
+        fetchVideo();
+    }, [movie.id]);
 
     // Auto-play/pause based on visibility and manual pause state
     useEffect(() => {
@@ -205,46 +201,61 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
 
     return (
         <View style={styles.container}>
-            {/* Native Video Player - Custom, No YouTube Branding */}
-            <View style={styles.videoContainer}>
-                {streamUrl && (
-                    <Video
-                        ref={videoRef}
-                        source={{ uri: streamUrl }}
-                        style={styles.nativeVideo}
-                        resizeMode={ResizeMode.COVER}
-                        shouldPlay={isActive}
-                        isLooping
-                        isMuted={false}
-                        volume={1.0}
-                        onLoad={() => setVideoReady(true)}
-                        onError={(err) => {
-                            console.error('Video error:', err);
-                            setError(true);
-                        }}
-                    />
-                )}
-            </View>
-
-            {/* Poster Image (Overlay that hides when video is ready) */}
-            {(!videoReady || !streamUrl || loading || error) && (
-                <View style={[styles.posterContainer, styles.absoluteFill]}>
-                    {posterUrl ? (
-                        <Image source={{ uri: posterUrl }} style={styles.poster} />
-                    ) : (
-                        <View style={[styles.poster, styles.placeholder]}>
-                            <Ionicons name="film-outline" size={80} color="#666" />
-                        </View>
-                    )}
-
-                    {loading && !error && (
-                        <View style={styles.loadingOverlay}>
-                            <ActivityIndicator size="large" color="#fff" />
-                            <Text style={styles.loadingText}>Loading trailer...</Text>
-                        </View>
+            {/* Video Modal with WebView */}
+            <Modal
+                animationType="fade"
+                transparent={false}
+                visible={showVideoModal}
+                onRequestClose={() => setShowVideoModal(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <TouchableOpacity 
+                        style={styles.closeButton}
+                        onPress={() => setShowVideoModal(false)}
+                    >
+                        <Ionicons name="close" size={30} color="#fff" />
+                    </TouchableOpacity>
+                    {embedUrl && (
+                        <WebView
+                            source={{ uri: embedUrl }}
+                            style={styles.webView}
+                            allowsFullscreenVideo={true}
+                            mediaPlaybackRequiresUserAction={false}
+                        />
                     )}
                 </View>
-            )}
+            </Modal>
+
+            {/* Poster Image with Play Button */}
+            <View style={[styles.posterContainer, styles.absoluteFill]}>
+                {posterUrl ? (
+                    <Image source={{ uri: posterUrl }} style={styles.poster} />
+                ) : (
+                    <View style={[styles.poster, styles.placeholder]}>
+                        <Ionicons name="film-outline" size={80} color="#666" />
+                    </View>
+                )}
+
+                {/* Play Button Overlay */}
+                {!loading && !error && embedUrl && (
+                    <TouchableOpacity 
+                        style={styles.playButtonOverlay}
+                        onPress={() => setShowVideoModal(true)}
+                    >
+                        <View style={styles.playButton}>
+                            <Ionicons name="play" size={40} color="#fff" />
+                        </View>
+                        <Text style={styles.playButtonText}>Watch Trailer</Text>
+                    </TouchableOpacity>
+                )}
+
+                {loading && (
+                    <View style={styles.loadingOverlay}>
+                        <ActivityIndicator size="large" color="#fff" />
+                        <Text style={styles.loadingText}>Loading trailer...</Text>
+                    </View>
+                )}
+            </View>
 
             {/* Gradient Overlays */}
             <LinearGradient
@@ -440,9 +451,45 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
-    webView: {
+    modalContainer: {
+        flex: 1,
         backgroundColor: '#000',
-        opacity: 0.99,
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 40,
+        right: 20,
+        zIndex: 10,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        borderRadius: 20,
+        padding: 8,
+    },
+    webView: {
+        flex: 1,
+        backgroundColor: '#000',
+    },
+    playButtonOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.3)',
+    },
+    playButton: {
+        backgroundColor: 'rgba(255, 0, 0, 0.9)',
+        borderRadius: 50,
+        width: 80,
+        height: 80,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    playButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
     },
     posterContainer: {
         width: '100%',

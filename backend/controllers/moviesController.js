@@ -210,111 +210,66 @@ async function markAsWatched(req, res) {
     }
 }
 
-// Simple in-memory cache for stream URLs (expires after 4 hours)
-const streamCache = new Map();
-const CACHE_DURATION = 4 * 60 * 60 * 1000; // 4 hours
-
 /**
- * Get direct video stream URL - OPTIMIZED with better format selection
+ * Get YouTube embed URL from TMDb videos
+ * Uses TMDb's official video data to construct YouTube embed links
  */
 async function getStream(req, res) {
     try {
         const tmdbId = req.params.tmdbId;
 
-        // Check cache first
-        const cached = streamCache.get(tmdbId);
-        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-            console.log(`✓ Cache hit for movie ${tmdbId}`);
-            return res.status(200).json(cached.data);
-        }
-
         // Get movie details to find YouTube ID
         const movieDetails = await tmdbService.getMovieDetails(tmdbId);
         const videos = movieDetails.videos?.results || [];
-        const trailer = videos.find(v => v.site === 'YouTube' && v.type === 'Trailer') || videos[0];
+        
+        // Find the best trailer (prefer official trailers)
+        let trailer = videos.find(v => 
+            v.site === 'YouTube' && 
+            v.type === 'Trailer' && 
+            v.official === true
+        );
+        
+        // If no official trailer, find any trailer
+        if (!trailer) {
+            trailer = videos.find(v => 
+                v.site === 'YouTube' && 
+                v.type === 'Trailer'
+            );
+        }
+        
+        // If no trailer, find any YouTube video
+        if (!trailer) {
+            trailer = videos.find(v => v.site === 'YouTube');
+        }
 
         if (!trailer || trailer.site !== 'YouTube') {
-            return res.status(404).json({ error: 'No YouTube trailer found' });
+            return res.status(404).json({ 
+                error: 'No YouTube video found',
+                embedUrl: null,
+                videoKey: null
+            });
         }
 
-        const videoUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
+        // Construct YouTube embed URL
+        const embedUrl = `https://www.youtube.com/embed/${trailer.key}?autoplay=1&rel=0&modestbranding=1`;
+        
+        console.log(`✓ Found video for movie ${tmdbId}: ${trailer.name} (${trailer.key})`);
 
-        // Get video info with optimized settings
-        const info = await ytdl.getInfo(videoUrl, {
-            requestOptions: {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept-Language': 'en-US,en;q=0.9'
-                }
-            }
+        return res.status(200).json({
+            embedUrl: embedUrl,
+            videoKey: trailer.key,
+            videoName: trailer.name,
+            videoType: trailer.type,
+            site: trailer.site,
+            type: 'embed'
         });
-
-        // OPTIMIZED: Find best format with audio+video (prioritize medium quality for reliability)
-        let format = null;
-
-        // Try 480p first (most reliable)
-        format = info.formats.find(f =>
-            f.hasVideo && f.hasAudio && f.height === 480 && f.container === 'mp4'
-        );
-
-        // Try 360p (very reliable)
-        if (!format) {
-            format = info.formats.find(f =>
-                f.hasVideo && f.hasAudio && f.height === 360
-            );
-        }
-
-        // Try 720p if available
-        if (!format) {
-            format = info.formats.find(f =>
-                f.hasVideo && f.hasAudio && f.height === 720 && f.container === 'mp4'
-            );
-        }
-
-        // Any format with both audio and video
-        if (!format) {
-            format = info.formats.find(f => f.hasVideo && f.hasAudio);
-        }
-
-        // Fallback: use ytdl's chooser
-        if (!format) {
-            format = ytdl.chooseFormat(info.formats, {
-                quality: 'highest',
-                filter: 'audioandvideo'
-            });
-        }
-
-        if (format && format.url) {
-            const quality = format.qualityLabel || `${format.height}p`;
-            const bitrate = format.bitrate ? Math.round(format.bitrate / 1000) + 'K' : 'unknown';
-            console.log(`✓ Selected format for ${tmdbId}: ${quality} @ ${bitrate}`);
-
-            const result = {
-                streamUrl: format.url,
-                quality: quality,
-                bitrate: format.bitrate,
-                type: 'direct'
-            };
-
-            // Cache the result
-            streamCache.set(tmdbId, {
-                data: result,
-                timestamp: Date.now()
-            });
-
-            // Clean old cache entries (keep max 100)
-            if (streamCache.size > 100) {
-                const firstKey = streamCache.keys().next().value;
-                streamCache.delete(firstKey);
-            }
-
-            return res.status(200).json(result);
-        } else {
-            return res.status(404).json({ error: 'No suitable stream found' });
-        }
     } catch (error) {
-        console.error(`✗ Stream extraction error for ${req.params.tmdbId}:`, error.message);
-        res.status(500).json({ error: 'Failed to extract stream' });
+        console.error(`✗ Video fetch error for ${req.params.tmdbId}:`, error.message);
+        res.status(500).json({ 
+            error: 'Failed to fetch video',
+            embedUrl: null,
+            videoKey: null
+        });
     }
 }
 

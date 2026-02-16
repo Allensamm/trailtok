@@ -13,10 +13,7 @@ if (process.env.DATABASE_URL) {
       ssl: {
         require: true,
         rejectUnauthorized: false // Required for some self-signed certs in cloud DBs
-      },
-      keepAlive: true,
-      // Force IPv4 to avoid ENETUNREACH errors
-      family: 4
+      }
     },
     pool: {
       max: 10,

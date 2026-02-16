@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "start": "cd backend && node server.js"
+  },
   "dependencies": {
     "autocannon": "^8.0.0"
   }

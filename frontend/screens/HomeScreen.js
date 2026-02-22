@@ -18,7 +18,12 @@ const HomeScreen = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Discover</Text>
+                <View style={styles.logoContainer}>
+                    <View style={styles.logo}>
+                        <Text style={styles.logoIcon}>▶</Text>
+                    </View>
+                    <Text style={styles.headerTitle}>TrailTok</Text>
+                </View>
                 <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileButton}>
                     <Ionicons name="person-circle-outline" size={32} color="#fff" />
                 </TouchableOpacity>
@@ -31,7 +36,7 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000',
+        backgroundColor: '#0a0a0f',
     },
     header: {
         flexDirection: 'row',
@@ -39,12 +44,29 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 20,
         paddingVertical: 12,
-        backgroundColor: '#000',
+        backgroundColor: '#0a0a0f',
         borderBottomWidth: 1,
-        borderBottomColor: '#222',
+        borderBottomColor: '#2a2a3a',
+    },
+    logoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    logo: {
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        backgroundColor: '#e50914',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    logoIcon: {
+        fontSize: 14,
+        color: '#fff',
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
         color: '#fff',
     },
@@ -53,7 +75,7 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
     },
     logoutText: {
-        color: '#007AFF',
+        color: '#e50914',
         fontSize: 16,
         fontWeight: '600',
     },

@@ -102,7 +102,7 @@ const GenreSelectionScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#0a0a0f',
     },
     header: {
         padding: 24,
@@ -110,12 +110,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#fff',
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 16,
-        color: '#666',
+        color: '#999',
         lineHeight: 22,
     },
     grid: {
@@ -127,19 +127,19 @@ const styles = StyleSheet.create({
     chip: {
         paddingVertical: 12,
         paddingHorizontal: 20,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#1a1a25',
         borderRadius: 30,
         margin: 6,
         borderWidth: 1,
-        borderColor: 'transparent',
+        borderColor: '#2a2a3a',
     },
     chipSelected: {
-        backgroundColor: '#007AFF', // Or your app primary color
-        borderColor: '#005bb5',
+        backgroundColor: '#e50914',
+        borderColor: '#e50914',
     },
     chipText: {
         fontSize: 14,
-        color: '#333',
+        color: '#999',
         fontWeight: '500',
     },
     chipTextSelected: {
@@ -151,18 +151,18 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         padding: 24,
-        backgroundColor: '#fff',
+        backgroundColor: '#0a0a0f',
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
+        borderTopColor: '#2a2a3a',
     },
     button: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#e50914',
         padding: 16,
         borderRadius: 12,
         alignItems: 'center',
     },
     buttonDisabled: {
-        backgroundColor: '#ccc',
+        backgroundColor: '#4a1a1a',
     },
     buttonText: {
         color: '#fff',

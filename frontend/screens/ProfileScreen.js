@@ -74,7 +74,7 @@ const ProfileScreen = ({ navigation }) => {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#007AFF" />
+                    <ActivityIndicator size="large" color="#e50914" />
                 </View>
             </SafeAreaView>
         );
@@ -122,7 +122,7 @@ const ProfileScreen = ({ navigation }) => {
                         style={styles.editButton}
                         onPress={() => navigation.navigate('GenreSelection')}
                     >
-                        <Ionicons name="settings-outline" size={20} color="#007AFF" />
+                        <Ionicons name="settings-outline" size={20} color="#e50914" />
                         <Text style={styles.editButtonText}>Edit Preferences</Text>
                     </TouchableOpacity>
                 </View>
@@ -140,7 +140,7 @@ const ProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000',
+        backgroundColor: '#0a0a0f',
     },
     loadingContainer: {
         flex: 1,
@@ -222,10 +222,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: '#007AFF',
+        borderColor: '#e50914',
     },
     editButtonText: {
-        color: '#007AFF',
+        color: '#e50914',
         fontSize: 16,
         fontWeight: '600',
         marginLeft: 8,

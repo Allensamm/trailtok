@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { WebView } from 'react-native-webview';
+import ytdl from '@distube/ytdl-core';
 import api from '../services/api';
 
 const { width, height } = Dimensions.get('window');
@@ -49,13 +50,19 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
             try {
                 setLoading(true);
                 setError(false);
+                
+                // Try to get embed URL from backend first
                 const response = await api.get(`/movies/${movie.id}/stream`);
-
+                
                 if (response.data.embedUrl) {
                     setEmbedUrl(response.data.embedUrl);
                     setVideoReady(true);
                 } else {
-                    setError(true);
+                    // Fallback: Use ytdl to get direct video URL
+                    const videoInfo = await ytdl.getInfo(response.data.videoKey);
+                    const videoUrl = videoInfo.videoDetails.video_url;
+                    setStreamUrl(videoUrl);
+                    setVideoReady(true);
                 }
             } catch (err) {
                 console.log('Video fetch error:', err);

@@ -77,9 +77,9 @@ const FeedScreen = () => {
                 timeout: 10000, // 10 second timeout (backend needs time for ytdl)
             });
 
-            if (response.data.streamUrl) {
+            if (response.data.embedUrl) {
                 setStreamCache(prev => {
-                    const newCache = { ...prev, [movieId]: response.data.streamUrl };
+                    const newCache = { ...prev, [movieId]: response.data.embedUrl };
 
                     // Limit cache size to prevent memory issues
                     const cacheKeys = Object.keys(newCache);

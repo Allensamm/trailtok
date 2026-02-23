@@ -76,9 +76,9 @@ const FeedScreen = () => {
                 timeout: 5000, // 5 second timeout
             });
 
-            if (response.data.streamUrl) {
+            if (response.data.embedUrl) {
                 setStreamCache(prev => {
-                    const newCache = { ...prev, [movieId]: response.data.streamUrl };
+                    const newCache = { ...prev, [movieId]: response.data.embedUrl };
 
                     // OPTIMIZATION: Limit cache size to prevent memory issues
                     const cacheKeys = Object.keys(newCache);

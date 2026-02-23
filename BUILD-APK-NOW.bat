@@ -19,7 +19,8 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo 🔧 Configuring EAS...
-npx eas build:configure
+rem npx eas build:configure
+echo Skipping configure - using existing eas.json
 
 echo 🔨 Building APK (this will take 15-20 minutes)...
 npx eas build --platform android --profile preview --non-interactive

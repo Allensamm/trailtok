@@ -2,9 +2,8 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 // Production API URL - will be updated after deployment
-const BASE_URL = __DEV__ 
-  ? 'http://192.168.1.122:5000/api' 
-  : 'https://movie-app-backend-84dg.onrender.com/api';
+// Using deployed backend for both development and production for reliability
+const BASE_URL = 'https://movie-app-backend-84dg.onrender.com/api';
 
 const api = axios.create({
     baseURL: BASE_URL,

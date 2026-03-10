@@ -19,7 +19,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { WebView } from 'react-native-webview';
-import ytdl from '@distube/ytdl-core';
 import api from '../services/api';
 
 const { width, height } = Dimensions.get('window');
@@ -30,39 +29,40 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
     const [liked, setLiked] = useState(false);
     const [watched, setWatched] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
-    const [videoReady, setVideoReady] = useState(false);
-    const [streamUrl, setStreamUrl] = useState(cachedStreamUrl || null);
+    const [videoReady, setVideoReady] = useState(!!cachedStreamUrl);
     const [loading, setLoading] = useState(!cachedStreamUrl);
     const [error, setError] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [showPauseIcon, setShowPauseIcon] = useState(false);
     const [showComments, setShowComments] = useState(false);
     const [showVideoModal, setShowVideoModal] = useState(false);
-    const [embedUrl, setEmbedUrl] = useState(null);
+    const [embedUrl, setEmbedUrl] = useState(cachedStreamUrl || null);
     const [comments, setComments] = useState([]);
     const [commentText, setCommentText] = useState('');
     const [loadingComments, setLoadingComments] = useState(false);
     const slideAnim = useRef(new Animated.Value(height)).current;
 
-    // Fetch embed URL for YouTube video
+    // Fetch embed URL for YouTube video (skip if already cached)
     useEffect(() => {
+        if (cachedStreamUrl) {
+            setEmbedUrl(cachedStreamUrl);
+            setVideoReady(true);
+            setLoading(false);
+            return;
+        }
+
         const fetchVideo = async () => {
             try {
                 setLoading(true);
                 setError(false);
-                
-                // Try to get embed URL from backend first
+
                 const response = await api.get(`/movies/${movie.id}/stream`);
-                
+
                 if (response.data.embedUrl) {
                     setEmbedUrl(response.data.embedUrl);
                     setVideoReady(true);
                 } else {
-                    // Fallback: Use ytdl to get direct video URL
-                    const videoInfo = await ytdl.getInfo(response.data.videoKey);
-                    const videoUrl = videoInfo.videoDetails.video_url;
-                    setStreamUrl(videoUrl);
-                    setVideoReady(true);
+                    setError(true);
                 }
             } catch (err) {
                 console.log('Video fetch error:', err);
@@ -73,7 +73,7 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
         };
 
         fetchVideo();
-    }, [movie.id]);
+    }, [movie.id, cachedStreamUrl]);
 
     // Auto-play/pause based on visibility and manual pause state
     useEffect(() => {
@@ -260,6 +260,13 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
                     <View style={styles.loadingOverlay}>
                         <ActivityIndicator size="large" color="#fff" />
                         <Text style={styles.loadingText}>Loading trailer...</Text>
+                    </View>
+                )}
+
+                {error && (
+                    <View style={styles.loadingOverlay}>
+                        <Ionicons name="alert-circle" size={50} color="#ff6b6b" />
+                        <Text style={styles.loadingText}>No trailer available</Text>
                     </View>
                 )}
             </View>

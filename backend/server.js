@@ -14,7 +14,21 @@ const PORT = process.env.PORT || 5000;
 let dbConnected = false;
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+    'https://movie-app-backend-84dg.onrender.com',
+    'http://localhost:5000',
+    'http://localhost:8081',
+];
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow mobile app requests (no origin) and whitelisted origins
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

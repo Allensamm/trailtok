@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import AppNavigator from './navigation/AppNavigator';
 import * as Updates from 'expo-updates';
@@ -16,7 +16,7 @@ export default function App() {
   
   // Animation for update notification
   const [updateNotificationVisible, setUpdateNotificationVisible] = useState(false);
-  const fadeAnim = new Animated.Value(0);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Check for updates on app start

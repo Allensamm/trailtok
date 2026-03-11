@@ -14,6 +14,7 @@ import {
     Platform,
     Animated,
     Modal,
+    AppState,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -25,7 +26,6 @@ const { width, height } = Dimensions.get('window');
 
 const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
     const navigation = useNavigation();
-    const videoRef = useRef(null);
     const [liked, setLiked] = useState(false);
     const [watched, setWatched] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
@@ -75,30 +75,18 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
         fetchVideo();
     }, [movie.id, cachedStreamUrl]);
 
-    // Auto-play/pause based on visibility and manual pause state
+    // Close video modal when app goes to background to prevent crash on resume
     useEffect(() => {
-        if (videoRef.current) {
-            if (isActive && streamUrl && videoReady && !isPaused) {
-                videoRef.current.playAsync().catch(err => {
-                    console.log('Play error:', err);
-                });
-            } else {
-                videoRef.current.pauseAsync().catch(err => {
-                    console.log('Pause error:', err);
-                });
+        const subscription = AppState.addEventListener('change', (nextState) => {
+            if (nextState === 'background' || nextState === 'inactive') {
+                setShowVideoModal(false);
             }
-        }
-    }, [isActive, streamUrl, videoReady, isPaused]);
-
-    // Reset pause state when scrolling to new video
-    useEffect(() => {
-        if (!isActive) {
-            setIsPaused(false);
-        }
-    }, [isActive]);
+        });
+        return () => subscription.remove();
+    }, []);
 
     const handleVideoTap = () => {
-        if (videoRef.current && streamUrl && videoReady) {
+        if (false) { // tap-to-pause reserved for future native video
             setIsPaused(!isPaused);
             setShowPauseIcon(true);
 

@@ -19,8 +19,17 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { WebView } from 'react-native-webview';
+import YoutubeIframe from 'react-native-youtube-iframe';
 import api from '../services/api';
+
+// Extract YouTube video key from embed URL or return as-is if already a key
+const extractVideoKey = (url) => {
+    if (!url) return null;
+    if (url.includes('/embed/')) {
+        return url.split('/embed/')[1]?.split('?')[0];
+    }
+    return url; // already a raw key
+};
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,6 +46,7 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
     const [showComments, setShowComments] = useState(false);
     const [showVideoModal, setShowVideoModal] = useState(false);
     const [embedUrl, setEmbedUrl] = useState(cachedStreamUrl || null);
+    const [videoKey, setVideoKey] = useState(extractVideoKey(cachedStreamUrl));
     const [comments, setComments] = useState([]);
     const [commentText, setCommentText] = useState('');
     const [loadingComments, setLoadingComments] = useState(false);
@@ -46,6 +56,7 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
     useEffect(() => {
         if (cachedStreamUrl) {
             setEmbedUrl(cachedStreamUrl);
+            setVideoKey(extractVideoKey(cachedStreamUrl));
             setVideoReady(true);
             setLoading(false);
             return;
@@ -58,7 +69,8 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
 
                 const response = await api.get(`/movies/${movie.id}/stream`);
 
-                if (response.data.embedUrl) {
+                if (response.data.videoKey) {
+                    setVideoKey(response.data.videoKey);
                     setEmbedUrl(response.data.embedUrl);
                     setVideoReady(true);
                 } else {
@@ -196,7 +208,7 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
 
     return (
         <View style={styles.container}>
-            {/* Video Modal with WebView */}
+            {/* Video Modal with YouTube Player */}
             <Modal
                 animationType="fade"
                 transparent={false}
@@ -204,20 +216,27 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
                 onRequestClose={() => setShowVideoModal(false)}
             >
                 <View style={styles.modalContainer}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.closeButton}
                         onPress={() => setShowVideoModal(false)}
                     >
                         <Ionicons name="close" size={30} color="#fff" />
                     </TouchableOpacity>
-                    {embedUrl && (
-                        <WebView
-                            source={{ uri: embedUrl }}
-                            style={styles.webView}
-                            allowsFullscreenVideo={true}
-                            mediaPlaybackRequiresUserAction={false}
-                        />
-                    )}
+                    <View style={styles.youtubeWrapper}>
+                        {videoKey && showVideoModal && (
+                            <YoutubeIframe
+                                height={width * (9 / 16)}
+                                width={width}
+                                videoId={videoKey}
+                                play={true}
+                                onError={(e) => {
+                                    console.log('YouTube error:', e);
+                                    setShowVideoModal(false);
+                                    setError(true);
+                                }}
+                            />
+                        )}
+                    </View>
                 </View>
             </Modal>
 
@@ -466,8 +485,10 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 8,
     },
-    webView: {
+    youtubeWrapper: {
         flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
         backgroundColor: '#000',
     },
     playButtonOverlay: {

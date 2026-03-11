@@ -22,13 +22,28 @@ import { LinearGradient } from 'expo-linear-gradient';
 import YoutubeIframe from 'react-native-youtube-iframe';
 import api from '../services/api';
 
-// Extract YouTube video key from embed URL or return as-is if already a key
+// Extract YouTube video ID from embed URL, youtu.be, or raw key
+const YOUTUBE_ID_REGEX = /^[a-zA-Z0-9_-]{11}$/;
+
 const extractVideoKey = (url) => {
     if (!url) return null;
+    // https://www.youtube.com/embed/VIDEO_ID?...
     if (url.includes('/embed/')) {
-        return url.split('/embed/')[1]?.split('?')[0];
+        const key = url.split('/embed/')[1]?.split('?')[0];
+        return YOUTUBE_ID_REGEX.test(key) ? key : null;
     }
-    return url; // already a raw key
+    // https://youtu.be/VIDEO_ID
+    if (url.includes('youtu.be/')) {
+        const key = url.split('youtu.be/')[1]?.split('?')[0];
+        return YOUTUBE_ID_REGEX.test(key) ? key : null;
+    }
+    // https://www.youtube.com/watch?v=VIDEO_ID
+    if (url.includes('v=')) {
+        const key = url.split('v=')[1]?.split('&')[0];
+        return YOUTUBE_ID_REGEX.test(key) ? key : null;
+    }
+    // Already a raw 11-char video ID
+    return YOUTUBE_ID_REGEX.test(url) ? url : null;
 };
 
 const { width, height } = Dimensions.get('window');
@@ -55,10 +70,13 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
     // Fetch embed URL for YouTube video (skip if already cached)
     useEffect(() => {
         if (cachedStreamUrl) {
+            const key = extractVideoKey(cachedStreamUrl);
+            console.log(`[VideoCard] cached movie=${movie.id} videoKey=${key}`);
             setEmbedUrl(cachedStreamUrl);
-            setVideoKey(extractVideoKey(cachedStreamUrl));
-            setVideoReady(true);
+            setVideoKey(key);
+            setVideoReady(!!key);
             setLoading(false);
+            if (!key) setError(true);
             return;
         }
 
@@ -69,11 +87,14 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
 
                 const response = await api.get(`/movies/${movie.id}/stream`);
 
-                if (response.data.videoKey) {
-                    setVideoKey(response.data.videoKey);
+                const key = response.data.videoKey || extractVideoKey(response.data.embedUrl);
+                console.log(`[VideoCard] movie=${movie.id} videoKey=${key}`);
+                if (key) {
+                    setVideoKey(key);
                     setEmbedUrl(response.data.embedUrl);
                     setVideoReady(true);
                 } else {
+                    console.warn(`[VideoCard] movie=${movie.id} — no valid YouTube ID found`);
                     setError(true);
                 }
             } catch (err) {
@@ -229,8 +250,15 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
                                 width={width}
                                 videoId={videoKey}
                                 play={true}
+                                forceAndroidAutoplay={true}
+                                initialPlayerParams={{
+                                    controls: true,
+                                    modestbranding: true,
+                                    rel: false,
+                                }}
+                                onReady={() => console.log(`[YouTube] ready: ${videoKey}`)}
                                 onError={(e) => {
-                                    console.log('YouTube error:', e);
+                                    console.log(`[YouTube] error for ${videoKey}:`, e);
                                     setShowVideoModal(false);
                                     setError(true);
                                 }}

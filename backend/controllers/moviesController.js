@@ -1,6 +1,5 @@
 const { UserPreference, Like, Comment, WatchedMovie, User } = require('../models');
 const tmdbService = require('../services/tmdbService');
-const ytdl = require('@distube/ytdl-core');
 
 /**
  * Get personalized movie feed

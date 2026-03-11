@@ -8,7 +8,6 @@ import {
     Text,
     Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import VideoMovieCard from '../components/VideoMovieCard';
@@ -204,7 +203,7 @@ const FeedScreen = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.container}>
             <FlatList
                 ref={flatListRef}
                 data={movies}
@@ -242,7 +241,7 @@ const FeedScreen = () => {
                 scrollEventThrottle={16}
                 updateCellsBatchingPeriod={50}
             />
-        </SafeAreaView>
+        </View>
     );
 };
 

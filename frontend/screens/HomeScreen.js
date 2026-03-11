@@ -1,23 +1,27 @@
 import React, { useContext, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 import FeedScreen from './FeedScreen';
 
 const HomeScreen = ({ navigation }) => {
-    const { logout, user } = useContext(AuthContext);
+    const { user } = useContext(AuthContext);
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
-        // Check if user has selected genres
         if (user && (!user.preferences || !user.preferences.preferred_genres || user.preferences.preferred_genres.length === 0)) {
             navigation.replace('GenreSelection');
         }
     }, [user, navigation]);
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
+        <View style={styles.container}>
+            {/* Feed takes full screen */}
+            <FeedScreen />
+
+            {/* Header floats over the feed */}
+            <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
                 <View style={styles.logoContainer}>
                     <View style={styles.logo}>
                         <Text style={styles.logoIcon}>▶</Text>
@@ -28,8 +32,7 @@ const HomeScreen = ({ navigation }) => {
                     <Ionicons name="person-circle-outline" size={32} color="#fff" />
                 </TouchableOpacity>
             </View>
-            <FeedScreen />
-        </SafeAreaView>
+        </View>
     );
 };
 
@@ -39,14 +42,18 @@ const styles = StyleSheet.create({
         backgroundColor: '#0a0a0f',
     },
     header: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingVertical: 12,
-        backgroundColor: '#0a0a0f',
-        borderBottomWidth: 1,
-        borderBottomColor: '#2a2a3a',
+        paddingBottom: 12,
+        zIndex: 10,
+        // Gradient-like fade so header doesn't fully block the video
+        backgroundColor: 'rgba(10, 10, 15, 0.6)',
     },
     logoContainer: {
         flexDirection: 'row',
@@ -69,15 +76,6 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: 'bold',
         color: '#fff',
-    },
-    logoutButton: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-    },
-    logoutText: {
-        color: '#e50914',
-        fontSize: 16,
-        fontWeight: '600',
     },
 });
 

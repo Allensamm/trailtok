@@ -13,14 +13,11 @@ import {
     KeyboardAvoidingView,
     Platform,
     Animated,
-    Modal,
-    AppState,
     Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import YoutubeIframe from 'react-native-youtube-iframe';
 import api from '../services/api';
 
 // Extract YouTube video ID from embed URL, youtu.be, or raw key
@@ -49,6 +46,7 @@ const extractVideoKey = (url) => {
 
 const { width, height } = Dimensions.get('window');
 
+
 const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
     const navigation = useNavigation();
     const [liked, setLiked] = useState(false);
@@ -60,7 +58,6 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
     const [isPaused, setIsPaused] = useState(false);
     const [showPauseIcon, setShowPauseIcon] = useState(false);
     const [showComments, setShowComments] = useState(false);
-    const [showVideoModal, setShowVideoModal] = useState(false);
     const [embedUrl, setEmbedUrl] = useState(cachedStreamUrl || null);
     const [videoKey, setVideoKey] = useState(extractVideoKey(cachedStreamUrl));
     const [comments, setComments] = useState([]);
@@ -108,16 +105,6 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
 
         fetchVideo();
     }, [movie.id, cachedStreamUrl]);
-
-    // Close video modal when app goes to background to prevent crash on resume
-    useEffect(() => {
-        const subscription = AppState.addEventListener('change', (nextState) => {
-            if (nextState === 'background' || nextState === 'inactive') {
-                setShowVideoModal(false);
-            }
-        });
-        return () => subscription.remove();
-    }, []);
 
     const handleVideoTap = () => {
         if (false) { // tap-to-pause reserved for future native video
@@ -230,64 +217,6 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
 
     return (
         <View style={styles.container}>
-            {/* Video Modal with YouTube Player */}
-            <Modal
-                animationType="fade"
-                transparent={false}
-                visible={showVideoModal}
-                onRequestClose={() => setShowVideoModal(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={() => setShowVideoModal(false)}
-                    >
-                        <Ionicons name="close" size={30} color="#fff" />
-                    </TouchableOpacity>
-                    <View style={styles.youtubeWrapper}>
-                        {videoKey && showVideoModal && (
-                            <YoutubeIframe
-                                height={width * (9 / 16)}
-                                width={width}
-                                videoId={videoKey}
-                                play={true}
-                                forceAndroidAutoplay={true}
-                                initialPlayerParams={{
-                                    controls: true,
-                                    modestbranding: true,
-                                    rel: false,
-                                }}
-                                webViewProps={{
-                                    allowsInlineMediaPlayback: true,
-                                    mediaPlaybackRequiresUserAction: false,
-                                    javaScriptEnabled: true,
-                                    domStorageEnabled: true,
-                                    thirdPartyCookiesEnabled: true,
-                                    mixedContentMode: 'always',
-                                }}
-                                webViewStyle={{ opacity: 0.99 }}
-                                onReady={() => console.log(`[YouTube] ready: ${videoKey}`)}
-                                onChangeState={(state) => console.log(`[YouTube] state: ${state}`)}
-                                onError={(e) => {
-                                    console.log(`[YouTube] error for ${videoKey}:`, e);
-                                    setShowVideoModal(false);
-                                    setError(true);
-                                }}
-                            />
-                        )}
-                        {videoKey && (
-                            <TouchableOpacity
-                                style={styles.openInYoutubeButton}
-                                onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${videoKey}`)}
-                            >
-                                <Ionicons name="logo-youtube" size={16} color="#fff" />
-                                <Text style={styles.openInYoutubeText}>Open in YouTube</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                </View>
-            </Modal>
-
             {/* Poster Image with Play Button */}
             <View style={[styles.posterContainer, styles.absoluteFill]}>
                 {posterUrl ? (
@@ -298,11 +227,11 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
                     </View>
                 )}
 
-                {/* Play Button Overlay */}
-                {!loading && !error && embedUrl && (
-                    <TouchableOpacity 
+                {/* Play Button — opens YouTube app directly */}
+                {!loading && !error && videoKey && (
+                    <TouchableOpacity
                         style={styles.playButtonOverlay}
-                        onPress={() => setShowVideoModal(true)}
+                        onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${videoKey}`)}
                     >
                         <View style={styles.playButton}>
                             <Ionicons name="play" size={40} color="#fff" />

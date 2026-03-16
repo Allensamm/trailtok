@@ -15,6 +15,7 @@ import {
     Animated,
     Modal,
     AppState,
+    Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -256,13 +257,32 @@ const VideoMovieCard = ({ movie, isActive, cachedStreamUrl }) => {
                                     modestbranding: true,
                                     rel: false,
                                 }}
+                                webViewProps={{
+                                    allowsInlineMediaPlayback: true,
+                                    mediaPlaybackRequiresUserAction: false,
+                                    javaScriptEnabled: true,
+                                    domStorageEnabled: true,
+                                    thirdPartyCookiesEnabled: true,
+                                    mixedContentMode: 'always',
+                                }}
+                                webViewStyle={{ opacity: 0.99 }}
                                 onReady={() => console.log(`[YouTube] ready: ${videoKey}`)}
+                                onChangeState={(state) => console.log(`[YouTube] state: ${state}`)}
                                 onError={(e) => {
                                     console.log(`[YouTube] error for ${videoKey}:`, e);
                                     setShowVideoModal(false);
                                     setError(true);
                                 }}
                             />
+                        )}
+                        {videoKey && (
+                            <TouchableOpacity
+                                style={styles.openInYoutubeButton}
+                                onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${videoKey}`)}
+                            >
+                                <Ionicons name="logo-youtube" size={16} color="#fff" />
+                                <Text style={styles.openInYoutubeText}>Open in YouTube</Text>
+                            </TouchableOpacity>
                         )}
                     </View>
                 </View>
@@ -792,6 +812,23 @@ const styles = StyleSheet.create({
     },
     sendButtonDisabled: {
         opacity: 0.5,
+    },
+    openInYoutubeButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        marginTop: 16,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+    },
+    openInYoutubeText: {
+        color: '#fff',
+        fontSize: 13,
     },
 });
 
